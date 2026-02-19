@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Beam Calculator v7</title>
+    <title>Interactive Beam Calculator v8</title>
     <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
     <style>
         body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; background-color: #f8f9fa; color: #333; }
@@ -56,8 +56,8 @@
 <body>
 
 <div class="container">
-    <h1>🏗️ Beam Bending Explorer (v7)</h1>
-    <p class="subtitle">Added x-y Coordinate System and Position Labels</p>
+    <h1>🏗️ Beam Bending Explorer (v8)</h1>
+    <p class="subtitle">Fixed BMD sign convention for point moments</p>
     
     <div class="mode-toggle">
         <label for="appMode" style="display:inline; font-size: 1.1em;">👨‍🏫 Mode:</label>
@@ -140,6 +140,7 @@
     // --- STATE ---
     let loads = [
         { type: 'point', pos: 5, mag: 10 },
+        { type: 'moment', pos: 3, mag: 15 },
         { type: 'dist', start: 6, end: 10, mag: 2 }
     ];
     let revealed = { reactions: false, sfd: false, bmd: false };
@@ -400,7 +401,10 @@
                         let eff_len = Math.min(xi, l.end) - l.start; let eff_F = l.mag * eff_len;
                         v -= eff_F; m -= eff_F * (xi - (l.start + eff_len/2));
                     }
-                    else if (l.type === 'moment' && xi > l.pos) { m -= l.mag; }
+                    else if (l.type === 'moment' && xi > l.pos) { 
+                        // FIXED: CW moment creates a positive jump in internal bending moment
+                        m += l.mag; 
+                    }
                 });
                 if(Math.abs(v) < 1e-5) v = 0; if(Math.abs(m) < 1e-5) m = 0;
                 x_plot.push(xi); V_plot.push(v); M_plot.push(m);
