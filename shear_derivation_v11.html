@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transverse Shear Stress — Interactive Derivation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f3f1ec;
+            --card: #ffffff;
+            --sidebar: #1b2838;
+            --sidebar-light: #243447;
+            --accent: #d95319;
+            --accent-light: #fff4ef;
+            --teal: #0891b2;
+            --teal-dark: #0e7490;
+            --red: #dc2626;
+            --purple: #7c3aed;
+            --green: #16a34a;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e0db;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+        .header { background: var(--sidebar); color: white; padding: 16px 28px; display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+        .header h1 { font-family: 'Source Serif 4', Georgia, serif; font-size: 1.4em; font-weight: 700; letter-spacing: -0.02em; }
+        .header .tag { font-family: 'JetBrains Mono', monospace; font-size: 0.95em; color: var(--accent); background: rgba(217,83,25,0.15); padding: 2px 10px; border-radius: 4px; }
+
+        .main { display: grid; grid-template-columns: 280px 1fr; max-width: 1440px; margin: 0 auto; min-height: calc(100vh - 60px); }
+
+        /* SIDEBAR */
+        .sb { background: var(--sidebar); padding: 18px; color: #c8d6e5; font-size: 0.88em; overflow-y: auto; }
+        .sb h3 { font-size: 0.72em; text-transform: uppercase; letter-spacing: 0.1em; color: #7a8ea0; margin: 18px 0 8px; }
+        .sb h3:first-child { margin-top: 0; }
+        .sb label { display: block; margin-bottom: 3px; font-size: 0.85em; color: #9aabbf; }
+        .sb select, .sb input[type="range"] { width: 100%; margin-bottom: 10px; }
+        .sb select { padding: 5px 8px; border-radius: 4px; border: 1px solid #3a4f63; background: var(--sidebar-light); color: white; font-family: inherit; font-weight: 600; font-size: 0.9em; }
+        input[type="range"] { -webkit-appearance: none; height: 5px; background: #3a4f63; border-radius: 3px; outline: none; cursor: pointer; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 2px solid white; }
+        .val { float: right; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--accent); font-size: 0.92em; }
+
+        .cut-toggle { display: flex; gap: 4px; margin-bottom: 10px; }
+        .cut-toggle button { flex: 1; padding: 6px; border: 1px solid #3a4f63; border-radius: 5px; background: transparent; color: #9aabbf; font-family: inherit; font-weight: 600; font-size: 0.82em; cursor: pointer; transition: all 0.15s; }
+        .cut-toggle button.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+        .step-nav { margin-top: 18px; padding-top: 14px; border-top: 1px solid #3a4f63; }
+        .step-dots { display: flex; gap: 5px; margin-bottom: 10px; justify-content: center; }
+        .step-dot { width: 9px; height: 9px; border-radius: 50%; background: #4a5e72; cursor: pointer; border: none; transition: all 0.15s; }
+        .step-dot.active { background: var(--accent); transform: scale(1.3); }
+        .step-dot.done { background: var(--green); }
+        .step-title { text-align: center; font-weight: 600; font-size: 0.9em; color: white; margin-bottom: 8px; min-height: 2em; }
+        .step-btns { display: flex; gap: 6px; }
+        .step-btns button { flex: 1; padding: 7px; border: none; border-radius: 5px; font-family: inherit; font-weight: 600; font-size: 0.82em; cursor: pointer; }
+        .btn-b { background: var(--sidebar-light); color: #9aabbf; }
+        .btn-b:hover { background: #2d4156; }
+        .btn-n { background: var(--accent); color: white; }
+        .btn-n:hover { background: #c4471a; }
+        .btn-all { background: transparent; color: #9aabbf; border: 1px solid #3a4f63; margin-top: 5px; width: 100%; padding: 6px; border-radius: 5px; font-family: inherit; font-weight: 600; font-size: 0.82em; cursor: pointer; }
+        .btn-all.on { border-color: var(--accent); color: var(--accent); }
+
+        .readout { margin-top: 16px; padding-top: 14px; border-top: 1px solid #3a4f63; font-family: 'JetBrains Mono', monospace; font-size: 0.78em; line-height: 1.9; }
+        .readout .lbl { color: #7a8ea0; }
+        .readout .v { color: #dde6f0; font-weight: 600; }
+        .readout .hl { color: var(--accent); font-weight: 600; font-size: 1.05em; }
+
+        /* CONTENT */
+        .content { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+        .cgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .pnl { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: opacity 0.25s, box-shadow 0.25s; }
+        .pnl.dim { opacity: 0.3; pointer-events: none; }
+        .pnl.hl { box-shadow: 0 0 0 2px var(--accent), 0 4px 16px rgba(217,83,25,0.1); }
+        .pnl-h { padding: 8px 14px; font-weight: 700; font-size: 0.78em; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); border-bottom: 1px solid var(--border); background: #fafaf8; }
+        .pnl-h .n { display: inline-block; width: 20px; height: 20px; line-height: 20px; text-align: center; border-radius: 50%; background: var(--text-muted); color: white; font-size: 0.78em; margin-right: 5px; }
+        .pnl.hl .pnl-h .n { background: var(--accent); }
+        canvas { display: block; margin: 0 auto; }
+
+        .expl { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 22px 26px; font-size: 0.95em; line-height: 1.75; border-left: 4px solid var(--accent); }
+        .eq { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 0.93em; background: var(--accent-light); padding: 1px 6px; border-radius: 3px; white-space: nowrap; }
+        .eq-bl { display: block; text-align: center; margin: 8px 0; font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 1.02em; }
+        .ct { color: var(--teal-dark); } .cr { color: var(--red); } .cp { color: var(--purple); } .ca { color: var(--accent); font-weight: 600; }
+
+        @media (max-width: 1100px) { .main { grid-template-columns: 1fr; } .cgrid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Transverse Shear Stress Derivation</h1>
+    <span class="tag">Textbook: τ = VQ/It</span>
+    <span class="tag" style="background:rgba(220,38,38,0.12);color:var(--red);">Signed: τ_xy = −VQ/It</span>
+    <span class="tag" style="background:rgba(8,145,178,0.15);color:var(--teal);">Web + Flange Cuts</span>
+</div>
+
+<div class="main">
+<div class="sb">
+    <h3>Beam Properties</h3>
+    <label>Cross Section</label>
+    <select id="secType" onchange="onSectionChange()">
+        <option value="rect">Solid Rectangle</option>
+        <option value="ibeam">I-Beam</option>
+    </select>
+    <label>Shear Force V (↓ positive) <span class="val" id="vV">50 kN</span></label>
+    <input type="range" id="slV" min="10" max="100" value="50" oninput="updateAll()">
+
+    <h3>Cut Type</h3>
+    <div class="cut-toggle" id="cutToggle">
+        <button class="active" onclick="setCut('web')">Web Cut (horizontal)</button>
+        <button onclick="setCut('flange')">Flange Cut (vertical)</button>
+    </div>
+
+    <div id="webControls">
+        <label>Cut position y <span class="val" id="vY">20 mm</span></label>
+        <input type="range" id="slY" min="-48" max="48" value="20" oninput="updateAll()">
+    </div>
+    <div id="flangeControls" style="display:none;">
+        <label>Cut position z <span class="val" id="vZ">30 mm</span></label>
+        <input type="range" id="slZ" min="11" max="49" value="30" oninput="updateAll()">
+        <label>Which flange? <span class="val" id="vFlange">Top</span></label>
+        <select id="selFlange" onchange="updateAll()">
+            <option value="top">Top Flange</option>
+            <option value="bot">Bottom Flange</option>
+        </select>
+    </div>
+
+    <div class="step-nav">
+        <h3>Derivation Steps</h3>
+        <div class="step-dots" id="sDots"></div>
+        <div class="step-title" id="sTitle"></div>
+        <div class="step-btns">
+            <button class="btn-b" onclick="prevStep()">← Back</button>
+            <button class="btn-n" onclick="nextStep()">Next →</button>
+        </div>
+        <button class="btn-all" id="btnAll" onclick="togAll()">Show All</button>
+    </div>
+
+    <div class="readout">
+        <h3>Computed Values</h3>
+        <span class="lbl">Cut type: </span><span class="v" id="rCut">Web</span><br>
+        <span class="lbl">Width at cut t = </span><span class="v" id="rT">100</span> mm<br>
+        <span class="lbl">I = </span><span class="v" id="rI">0</span> mm⁴<br>
+        <span class="lbl">A′ = </span><span class="v" id="rAp">0</span> mm²<br>
+        <span class="lbl">ȳ (or z̄) = </span><span class="v" id="rYbar">0</span> mm<br>
+        <span class="lbl">Q = A′·ȳ = </span><span class="v" id="rQ">0</span> mm³<br>
+        <span class="hl" id="rTauLine">τ = <span id="rTau">0</span> MPa</span>
+    </div>
+</div>
+
+<div class="content">
+    <div class="cgrid">
+        <div class="pnl" id="p1">
+            <div class="pnl-h"><span class="n">1</span> Cross-Section & Cut</div>
+            <canvas id="c1" width="440" height="380"></canvas>
+        </div>
+        <div class="pnl" id="p2">
+            <div class="pnl-h"><span class="n">2</span> 3D Free-Body Diagram</div>
+            <canvas id="c2" width="440" height="380"></canvas>
+        </div>
+        <div class="pnl" id="p3">
+            <div class="pnl-h"><span class="n">3</span> <span id="p3title">Stress Element — τ<sub>yx</sub> ↔ τ<sub>xy</sub></span></div>
+            <canvas id="c3" width="440" height="380"></canvas>
+        </div>
+        <div class="pnl" id="p4">
+            <div class="pnl-h"><span class="n">4</span> Shear Stress Distribution & Flow</div>
+            <canvas id="c4" width="440" height="380"></canvas>
+        </div>
+    </div>
+    <div class="expl" id="explBox"></div>
+</div>
+</div>
+
+<script>
+// ─── GEOMETRY ────────────────────────────────────────
+const B = 100, H = 100, TF = 20, TW = 20;
+
+function getI(tp) {
+    if (tp === 'rect') return (B * H**3) / 12;
+    return (B * H**3) / 12 - ((B - TW) * (H - 2*TF)**3) / 12;
+}
+
+// Web cut: width at y
+function webWidth(tp, y) {
+    if (tp === 'rect') return B;
+    return Math.abs(y) > (H/2 - TF) ? B : TW;
+}
+
+// Web cut Q: first moment of area above |y_cut| about N.A.
+function webQ(tp, yc) {
+    let y = Math.abs(yc);
+    if (y >= H/2) return 0;
+    if (tp === 'rect' || y >= (H/2 - TF)) {
+        return B * (H/2 - y) * (y + (H/2 - y)/2);
+    }
+    const Qf = B * TF * (H/2 - TF/2);
+    const Qw = TW * ((H/2 - TF) - y) * (y + ((H/2 - TF) - y)/2);
+    return Qf + Qw;
+}
+
+function webAp(tp, yc) {
+    let y = Math.abs(yc);
+    if (y >= H/2) return 0;
+    if (tp === 'rect' || y >= (H/2 - TF)) return B * (H/2 - y);
+    return B * TF + TW * ((H/2 - TF) - y);
+}
+
+// Flange cut: vertical cut at |z| in top or bottom flange
+// Isolates the outboard portion (from |z| to B/2)
+function flangeQ(zc) {
+    // Area of outboard strip: (B/2 - |z|) * TF
+    // Centroid of that strip is at z_bar from N.A.? No — Q is about the N.A. in y
+    // The outboard flange piece has y-centroid at (H/2 - TF/2) for top flange
+    // Q = A_outboard * y_bar_of_outboard
+    const z = Math.abs(zc);
+    if (z >= B/2) return 0;
+    if (z < TW/2) z_eff = TW/2; // can't cut inside the web
+    else z_eff = z;
+    var z_eff = Math.max(z, TW/2);
+    const A_out = (B/2 - z_eff) * TF;
+    const ybar = H/2 - TF/2; // distance of flange centroid from N.A.
+    return A_out * ybar;
+}
+
+function flangeAp(zc) {
+    const z = Math.max(Math.abs(zc), TW/2);
+    if (z >= B/2) return 0;
+    return (B/2 - z) * TF;
+}
+
+// ─── STATE ───────────────────────────────────────────
+let cutMode = 'web'; // 'web' or 'flange'
+let curStep = 0, showAll = false;
+
+const STEPS_WEB = [
+    "Step 1 — Horizontal Cut & A′",
+    "Step 2 — Normal Forces F₁, F₂",
+    "Step 3 — F₂ > F₁ → τ_yx on horizontal face",
+    "Step 4 — Complementary Shear τ_xy = τ_yx",
+    "Step 5 — Distribution & Shear Flow"
+];
+const STEPS_FLANGE = [
+    "Step 1 — Vertical Cut in Flange & A′",
+    "Step 2 — Normal Forces F₁, F₂ on outboard piece",
+    "Step 3 — F₂ > F₁ → τ_zx on cut face",
+    "Step 4 — Complementary Shear τ_xz = τ_zx",
+    "Step 5 — Shear Flow in Flange"
+];
+
+function getSteps() { return cutMode === 'web' ? STEPS_WEB : STEPS_FLANGE; }
+
+function setCut(m) {
+    cutMode = m;
+    document.querySelectorAll('.cut-toggle button').forEach((b,i) => b.classList.toggle('active', (i===0&&m==='web')||(i===1&&m==='flange')));
+    document.getElementById('webControls').style.display = m === 'web' ? '' : 'none';
+    document.getElementById('flangeControls').style.display = m === 'flange' ? '' : 'none';
+    curStep = 0; showAll = false;
+    updateAll();
+}
+
+function onSectionChange() {
+    const tp = document.getElementById('secType').value;
+    const tog = document.getElementById('cutToggle');
+    if (tp === 'rect') { cutMode = 'web'; tog.style.display = 'none'; setCut('web'); }
+    else { tog.style.display = 'flex'; }
+    updateAll();
+}
+
+function buildDots() {
+    const c = document.getElementById('sDots'), st = getSteps();
+    c.innerHTML = '';
+    for (let i = 0; i < st.length; i++) {
+        const d = document.createElement('button');
+        d.className = 'step-dot' + (i < curStep ? ' done' : '') + (i === curStep ? ' active' : '');
+        d.onclick = () => { showAll = false; curStep = i; updateAll(); };
+        c.appendChild(d);
+    }
+}
+function setStepUI() {
+    buildDots();
+    const st = getSteps();
+    document.getElementById('sTitle').textContent = showAll ? 'All Steps' : st[curStep];
+    document.getElementById('btnAll').classList.toggle('on', showAll);
+    const ids = ['p1','p2','p3','p4'];
+    const step = showAll ? 4 : curStep;
+    ids.forEach((id, i) => {
+        const el = document.getElementById(id);
+        el.classList.toggle('dim', !showAll && i > step);
+        el.classList.toggle('hl', !showAll && i === step);
+    });
+}
+function nextStep() { const st = getSteps(); if (curStep < st.length-1) { showAll=false; curStep++; updateAll(); } }
+function prevStep() { if (curStep > 0) { showAll=false; curStep--; updateAll(); } }
+function togAll() { showAll = !showAll; updateAll(); }
+
+// ─── DRAWING HELPERS ─────────────────────────────────
+function arr(ctx, x1,y1,x2,y2, col, lw=2) {
+    const a = Math.atan2(y2-y1,x2-x1), hl=8;
+    ctx.save(); ctx.strokeStyle=col; ctx.lineWidth=lw; ctx.fillStyle=col;
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x2,y2);
+    ctx.lineTo(x2-hl*Math.cos(a-Math.PI/6),y2-hl*Math.sin(a-Math.PI/6));
+    ctx.lineTo(x2-hl*Math.cos(a+Math.PI/6),y2-hl*Math.sin(a+Math.PI/6));
+    ctx.closePath(); ctx.fill(); ctx.restore();
+}
+function rr(ctx,x,y,w,h,r) {
+    ctx.beginPath(); ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
+}
+
+// ─── 1. CROSS-SECTION ───────────────────────────────
+function draw1(ctx, tp, state) {
+    const W=440, HH=380; ctx.clearRect(0,0,W,HH);
+    const sc=2.2, cx=W/2, cy=HH/2;
+
+    // Axes: +y up, +z LEFT (right-hand rule with +x out of screen)
+    ctx.strokeStyle='#b0b8c4'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(20,cy); ctx.lineTo(W-20,cy); ctx.stroke(); // horizontal
+    ctx.beginPath(); ctx.moveTo(cx,HH-10); ctx.lineTo(cx,10); ctx.stroke(); // vertical
+    ctx.setLineDash([]);
+    // z arrow pointing LEFT
+    arr(ctx, cx+40, cy, 28, cy, '#b0b8c4', 1);
+    ctx.fillStyle='#8899aa'; ctx.font='italic 13px DM Sans';
+    ctx.textAlign='right'; ctx.fillText('+z',26,cy-8);
+    // y arrow pointing UP
+    arr(ctx, cx, cy-40, cx, 18, '#b0b8c4', 1);
+    ctx.textAlign='left'; ctx.fillText('+y',cx+6,22);
+    // N.A. label
+    ctx.textAlign='left'; ctx.fillText('N.A.',W-60,cy-8);
+    // RHR note
+    ctx.fillStyle='#b0b8c4'; ctx.font='10px DM Sans'; ctx.textAlign='center';
+    ctx.fillText('(+x out of screen, RHR)',cx,HH-4);
+
+    // Cross-section outline
+    function shapePath() {
+        ctx.beginPath();
+        if (tp==='rect') { ctx.rect(cx-(B*sc)/2, cy-(H*sc)/2, B*sc, H*sc); }
+        else {
+            const wf=B*sc,hf=TF*sc,ww=TW*sc,hh=H*sc;
+            ctx.moveTo(cx-wf/2,cy-hh/2); ctx.lineTo(cx+wf/2,cy-hh/2);
+            ctx.lineTo(cx+wf/2,cy-hh/2+hf); ctx.lineTo(cx+ww/2,cy-hh/2+hf);
+            ctx.lineTo(cx+ww/2,cy+hh/2-hf); ctx.lineTo(cx+wf/2,cy+hh/2-hf);
+            ctx.lineTo(cx+wf/2,cy+hh/2); ctx.lineTo(cx-wf/2,cy+hh/2);
+            ctx.lineTo(cx-wf/2,cy+hh/2-hf); ctx.lineTo(cx-ww/2,cy+hh/2-hf);
+            ctx.lineTo(cx-ww/2,cy-hh/2+hf); ctx.lineTo(cx-wf/2,cy-hh/2+hf);
+            ctx.closePath();
+        }
+    }
+
+    if (cutMode === 'web') {
+        const yc = state.yc, cutPx = cy - yc*sc;
+        // Shade A' (above cut)
+        if (Math.abs(yc) < H/2) {
+            ctx.save(); shapePath(); ctx.clip();
+            ctx.fillStyle='rgba(217,83,25,0.2)';
+            ctx.fillRect(0, cy-(H/2)*sc, W, cutPx-(cy-(H/2)*sc));
+            ctx.restore();
+        }
+        // Outline
+        ctx.strokeStyle='#2d3748'; ctx.lineWidth=2; shapePath(); ctx.stroke();
+        // Cut line
+        if (Math.abs(yc)<H/2) {
+            const wCut = webWidth(tp,yc)*sc;
+            ctx.strokeStyle='#d95319'; ctx.lineWidth=2.5; ctx.setLineDash([6,4]);
+            ctx.beginPath(); ctx.moveTo(cx-wCut/2-15,cutPx); ctx.lineTo(cx+wCut/2+15,cutPx); ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle='#d95319'; ctx.font='bold 12px DM Sans'; ctx.textAlign='left';
+            ctx.fillText('y='+yc+'mm', cx+wCut/2+18, cutPx+4);
+            // A' label
+            const bx=cx-(B*sc)/2-18, topPx=cy-(H/2)*sc;
+            ctx.strokeStyle='#d95319'; ctx.lineWidth=1.5;
+            ctx.beginPath(); ctx.moveTo(bx+5,topPx); ctx.lineTo(bx,topPx); ctx.lineTo(bx,cutPx); ctx.lineTo(bx+5,cutPx); ctx.stroke();
+            ctx.fillStyle='#d95319'; ctx.font='bold 12px DM Sans'; ctx.textAlign='right';
+            ctx.fillText("A′",bx-3,(topPx+cutPx)/2+4);
+            // Centroid
+            const Ap=state.Ap, Qv=state.Q;
+            if (Ap>0) {
+                const ybar_s = yc>=0 ? Qv/Ap : -(Qv/Ap);
+                const ybPx = cy-ybar_s*sc;
+                ctx.fillStyle='#0891b2'; ctx.beginPath(); ctx.arc(cx,ybPx,5,0,2*Math.PI); ctx.fill();
+                ctx.font='600 11px DM Sans'; ctx.textAlign='left'; ctx.fillText('ȳ of A′',cx+8,ybPx+4);
+            }
+            // Width t
+            const wt=webWidth(tp,yc)*sc, ty=cutPx+16;
+            ctx.strokeStyle='#64748b'; ctx.lineWidth=1;
+            ctx.beginPath(); ctx.moveTo(cx-wt/2,ty); ctx.lineTo(cx+wt/2,ty); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(cx-wt/2,ty-3); ctx.lineTo(cx-wt/2,ty+3); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(cx+wt/2,ty-3); ctx.lineTo(cx+wt/2,ty+3); ctx.stroke();
+            ctx.fillStyle='#64748b'; ctx.font='italic 11px DM Sans'; ctx.textAlign='center'; ctx.fillText('t',cx,ty+13);
+        }
+    } else {
+        // Flange cut
+        const zc = state.zc, flange = state.flange;
+        const flangeY = flange==='top' ? -H/2 : H/2-TF; // top of flange in beam coords
+        const flangeYpx_top = cy - (flange==='top'?H/2:-H/2+TF)*sc;
+        const flangeYpx_bot = cy - (flange==='top'?H/2-TF:-H/2)*sc;
+
+        // Shade outboard A' — with +z pointing LEFT:
+        // Right outboard: z from -zc to -B/2 → pixels from cx+zc*sc to cx+(B/2)*sc
+        // Left outboard:  z from +zc to +B/2 → pixels from cx-zc*sc to cx-(B/2)*sc
+        ctx.save(); shapePath(); ctx.clip();
+        ctx.fillStyle='rgba(217,83,25,0.2)';
+        // Right outboard piece (negative z side, RIGHT on screen)
+        const zcPxR = cx + zc*sc;  // z = -zc maps to right
+        const bPxR = cx + (B/2)*sc;
+        ctx.fillRect(zcPxR, flangeYpx_top, bPxR-zcPxR, flangeYpx_bot-flangeYpx_top);
+        // Left outboard piece (positive z side, LEFT on screen)
+        const zcPxL = cx - zc*sc;  // z = +zc maps to left
+        const bPxL = cx - (B/2)*sc;
+        ctx.fillRect(bPxL, flangeYpx_top, zcPxL-bPxL, flangeYpx_bot-flangeYpx_top);
+        ctx.restore();
+
+        // Outline
+        ctx.strokeStyle='#2d3748'; ctx.lineWidth=2; shapePath(); ctx.stroke();
+
+        // Cut lines (vertical, both sides)
+        ctx.strokeStyle='#d95319'; ctx.lineWidth=2.5; ctx.setLineDash([6,4]);
+        ctx.beginPath(); ctx.moveTo(zcPxR,flangeYpx_top-8); ctx.lineTo(zcPxR,flangeYpx_bot+8); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(zcPxL,flangeYpx_top-8); ctx.lineTo(zcPxL,flangeYpx_bot+8); ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle='#d95319'; ctx.font='bold 12px DM Sans';
+        ctx.textAlign='left'; ctx.fillText('z=−'+zc, zcPxR+4, flangeYpx_bot+20);
+        ctx.textAlign='right'; ctx.fillText('z=+'+zc, zcPxL-4, flangeYpx_bot+20);
+
+        // A' label (right outboard piece)
+        ctx.fillStyle='#d95319'; ctx.font='bold 12px DM Sans'; ctx.textAlign='center';
+        ctx.fillText("A′", (zcPxR+bPxR)/2, (flangeYpx_top+flangeYpx_bot)/2+4);
+
+        // Centroid dot of A' — ȳ is the y-distance from N.A.
+        const Ap = state.Ap, Qv = state.Q;
+        if (Ap > 0) {
+            const ybar_val = Qv / Ap; // always positive (distance from N.A.)
+            const ybar_sign = flange === 'top' ? ybar_val : -ybar_val;
+            const ybPx = cy - ybar_sign * sc;
+            const zMidPx = (zcPxR + bPxR) / 2; // midpoint of outboard strip on screen
+            ctx.fillStyle = '#0891b2';
+            ctx.beginPath(); ctx.arc(zMidPx, ybPx, 5, 0, 2*Math.PI); ctx.fill();
+            ctx.font = '600 11px DM Sans'; ctx.textAlign = 'left';
+            ctx.fillText('ȳ of A′', zMidPx + 8, ybPx + 4);
+        }
+
+        // t label (flange thickness)
+        const tLx = bPxR+10;
+        ctx.strokeStyle='#64748b'; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.moveTo(tLx,flangeYpx_top); ctx.lineTo(tLx,flangeYpx_bot); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(tLx-3,flangeYpx_top); ctx.lineTo(tLx+3,flangeYpx_top); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(tLx-3,flangeYpx_bot); ctx.lineTo(tLx+3,flangeYpx_bot); ctx.stroke();
+        ctx.fillStyle='#64748b'; ctx.font='italic 11px DM Sans'; ctx.textAlign='left';
+        ctx.fillText('t=t_f', tLx+4, (flangeYpx_top+flangeYpx_bot)/2+4);
+    }
+}
+
+// ─── ISO 3D ──────────────────────────────────────────
+const AI = Math.PI/6;
+function iso(x,y,z,cx,cy,s) {
+    return { x: cx+(x-z)*Math.cos(AI)*s, y: cy-y*s+(x+z)*Math.sin(AI)*s };
+}
+
+function buildProf(tp, y1, y2) {
+    let p=[];
+    if (y1>=y2) return p;
+    if (tp==='rect') { p.push({y:y1,z:-B/2},{y:y1,z:B/2},{y:y2,z:B/2},{y:y2,z:-B/2}); return p; }
+    // I-beam
+    if (y1<-H/2+TF) p.push({y:y1,z:B/2}); else if (y1<H/2-TF) p.push({y:y1,z:TW/2}); else p.push({y:y1,z:B/2});
+    if (y1<-H/2+TF&&y2>-H/2+TF) { p.push({y:-H/2+TF,z:B/2}); p.push({y:-H/2+TF,z:TW/2}); }
+    if (y1<H/2-TF&&y2>H/2-TF) { p.push({y:H/2-TF,z:TW/2}); p.push({y:H/2-TF,z:B/2}); }
+    if (y2<=-H/2+TF) p.push({y:y2,z:B/2}); else if (y2<=H/2-TF) p.push({y:y2,z:TW/2}); else p.push({y:y2,z:B/2});
+    if (y2<=-H/2+TF) p.push({y:y2,z:-B/2}); else if (y2<=H/2-TF) p.push({y:y2,z:-TW/2}); else p.push({y:y2,z:-B/2});
+    if (y1<H/2-TF&&y2>H/2-TF) { p.push({y:H/2-TF,z:-B/2}); p.push({y:H/2-TF,z:-TW/2}); }
+    if (y1<-H/2+TF&&y2>-H/2+TF) { p.push({y:-H/2+TF,z:-TW/2}); p.push({y:-H/2+TF,z:-B/2}); }
+    if (y1<-H/2+TF) p.push({y:y1,z:-B/2}); else if (y1<H/2-TF) p.push({y:y1,z:-TW/2}); else p.push({y:y1,z:-B/2});
+    return p;
+}
+
+function drawExt(ctx, prof, x0, x1, cx, cy, s, fill, stroke) {
+    if (!prof.length) return;
+    // Back
+    ctx.beginPath(); prof.forEach((p,i)=>{let pt=iso(x0,p.y,p.z,cx,cy,s);i?ctx.lineTo(pt.x,pt.y):ctx.moveTo(pt.x,pt.y);});
+    ctx.closePath(); ctx.fillStyle=fill; ctx.fill(); ctx.strokeStyle=stroke; ctx.lineWidth=1; ctx.stroke();
+    // Sides
+    for(let i=0;i<prof.length;i++){const a=prof[i],bb=prof[(i+1)%prof.length];
+        const p0=iso(x0,a.y,a.z,cx,cy,s),p1=iso(x1,a.y,a.z,cx,cy,s),p2=iso(x1,bb.y,bb.z,cx,cy,s),p3=iso(x0,bb.y,bb.z,cx,cy,s);
+        ctx.beginPath();ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.lineTo(p3.x,p3.y);
+        ctx.closePath();ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke();}
+    // Front
+    ctx.beginPath(); prof.forEach((p,i)=>{let pt=iso(x1,p.y,p.z,cx,cy,s);i?ctx.lineTo(pt.x,pt.y):ctx.moveTo(pt.x,pt.y);});
+    ctx.closePath(); ctx.fillStyle=fill.replace(/[\d.]+\)$/,m=>(parseFloat(m)+0.15)+')'); ctx.fill();
+    ctx.strokeStyle=stroke; ctx.lineWidth=1.5; ctx.stroke();
+}
+
+function drawTriad(ctx, ox, oy) {
+    const s=1,l=32,o=iso(0,0,0,ox,oy,s),px=iso(l,0,0,ox,oy,s),py=iso(0,l,0,ox,oy,s),pz=iso(0,0,l,ox,oy,s);
+    ctx.font='italic 12px DM Sans'; ctx.lineWidth=1.5;
+    [['x',px,'left'],['y',py,'center'],['z',pz,'right']].forEach(([lb,p,a])=>{
+        arr(ctx,o.x,o.y,p.x,p.y,'#495057',1.5);
+        ctx.fillStyle='#495057'; ctx.textAlign=a;
+        ctx.fillText(lb,p.x+(a==='left'?5:a==='right'?-5:0),p.y+(lb==='y'?-8:8));
+    });
+}
+
+// ─── 2. 3D FBD ──────────────────────────────────────
+function draw2(ctx, tp, state) {
+    const W=440,HH=380; ctx.clearRect(0,0,W,HH);
+    const cx=220, cy=210, s=1.15, dx=25, x0=-dx, x1=dx;
+    const step = showAll ? 4 : curStep;
+
+    if (cutMode === 'web') {
+        const yc = state.yc;
+        if (Math.abs(yc)>=H/2) { ctx.fillStyle='#94a3b8'; ctx.font='14px DM Sans'; ctx.textAlign='center'; ctx.fillText('Cut at surface.',cx,cy); return; }
+        // Draw the top chunk
+        const prof = buildProf(tp, yc, H/2);
+        drawExt(ctx, prof, x0, x1, cx, cy, s, 'rgba(217,83,25,0.25)', '#4a5568');
+        // Cut surface highlight
+        const wc = webWidth(tp,yc);
+        const pA=iso(x0,yc,-wc/2,cx,cy,s),pB=iso(x1,yc,-wc/2,cx,cy,s),pC=iso(x1,yc,wc/2,cx,cy,s),pD=iso(x0,yc,wc/2,cx,cy,s);
+        ctx.beginPath();ctx.moveTo(pA.x,pA.y);ctx.lineTo(pB.x,pB.y);ctx.lineTo(pC.x,pC.y);ctx.lineTo(pD.x,pD.y);
+        ctx.closePath();ctx.fillStyle='rgba(220,38,38,0.2)';ctx.fill();
+
+        const Ap=state.Ap, Qv=state.Q;
+        const ybar = Ap>0?(yc>=0?Qv/Ap:-(Qv/Ap)):0;
+
+        // F1 (back face)
+        if (step>=1) {
+            const f1s=iso(x0-18,ybar,0,cx,cy,s),f1e=iso(x0,ybar,0,cx,cy,s);
+            arr(ctx,f1s.x,f1s.y,f1e.x,f1e.y,'#0891b2',2.5);
+            ctx.fillStyle='#0891b2'; ctx.font='bold 13px DM Sans'; ctx.textAlign='right';
+            ctx.fillText('F₁',f1s.x-4,f1s.y+4);
+            const m1=iso(x0,ybar+22,-12,cx,cy,s);
+            ctx.fillStyle='#7c3aed'; ctx.font='italic 12px DM Sans'; ctx.textAlign='right';
+            ctx.fillText('M',m1.x-2,m1.y);
+        }
+        // F2 (front face)
+        if (step>=2) {
+            const f2s=iso(x1+22,ybar,0,cx,cy,s),f2e=iso(x1,ybar,0,cx,cy,s);
+            arr(ctx,f2s.x,f2s.y,f2e.x,f2e.y,'#0891b2',2.5);
+            ctx.fillStyle='#0891b2'; ctx.font='bold 13px DM Sans'; ctx.textAlign='left';
+            ctx.fillText('F₂ > F₁',f2s.x+4,f2s.y+4);
+            const m2=iso(x1,ybar+22,-12,cx,cy,s);
+            ctx.fillStyle='#7c3aed'; ctx.font='italic 12px DM Sans'; ctx.textAlign='left';
+            ctx.fillText('M+dM',m2.x+6,m2.y);
+        }
+        // τ_yx arrows on cut face (pointing +x: back→front)
+        if (step>=3) {
+            for(let zo of [-wc/3,0,wc/3]) {
+                const ss=iso(x0*0.6,yc,zo,cx,cy,s),se=iso(x1*0.6,yc,zo,cx,cy,s);
+                arr(ctx,ss.x,ss.y,se.x,se.y,'#dc2626',2);
+            }
+            const lp=iso(x1+5,yc,0,cx,cy,s);
+            ctx.fillStyle='#dc2626'; ctx.font='bold 14px JetBrains Mono'; ctx.textAlign='left';
+            ctx.fillText('τ_yx',lp.x+2,lp.y+16);
+        }
+    } else {
+        // FLANGE CUT 3D FBD
+        const zc = state.zc, flange = state.flange;
+        const yBot = flange==='top' ? H/2-TF : -H/2;
+        const yTop = flange==='top' ? H/2 : -H/2+TF;
+
+        // Draw outboard flange piece (right side: z from zc to B/2)
+        const prof = [{y:yBot,z:zc},{y:yBot,z:B/2},{y:yTop,z:B/2},{y:yTop,z:zc}];
+        drawExt(ctx, prof, x0, x1, cx, cy, s, 'rgba(217,83,25,0.25)', '#4a5568');
+
+        // Cut surface (vertical face at z=zc) — highlighted prominently
+        const pA=iso(x0,yBot,zc,cx,cy,s),pB=iso(x1,yBot,zc,cx,cy,s),pC=iso(x1,yTop,zc,cx,cy,s),pD=iso(x0,yTop,zc,cx,cy,s);
+        ctx.beginPath();ctx.moveTo(pA.x,pA.y);ctx.lineTo(pB.x,pB.y);ctx.lineTo(pC.x,pC.y);ctx.lineTo(pD.x,pD.y);
+        ctx.closePath();ctx.fillStyle='rgba(220,38,38,0.35)';ctx.fill();
+        ctx.strokeStyle='#dc2626'; ctx.lineWidth=2.5; ctx.stroke();
+        // Label the cut face
+        const faceMid = iso((x0+x1)/2, (yBot+yTop)/2, zc, cx, cy, s);
+        ctx.fillStyle='#dc2626'; ctx.font='bold 11px DM Sans'; ctx.textAlign='center';
+        ctx.fillText('cut face', faceMid.x-20, faceMid.y-12);
+
+        const yMid = (yBot+yTop)/2;
+        const zMid = (zc+B/2)/2;
+
+        // F1 (back face)
+        if (step>=1) {
+            const f1s=iso(x0-18,yMid,zMid,cx,cy,s),f1e=iso(x0,yMid,zMid,cx,cy,s);
+            arr(ctx,f1s.x,f1s.y,f1e.x,f1e.y,'#0891b2',2.5);
+            ctx.fillStyle='#0891b2'; ctx.font='bold 13px DM Sans'; ctx.textAlign='right';
+            ctx.fillText('F₁',f1s.x-4,f1s.y+4);
+        }
+        // F2 (front face)
+        if (step>=2) {
+            const f2s=iso(x1+22,yMid,zMid,cx,cy,s),f2e=iso(x1,yMid,zMid,cx,cy,s);
+            arr(ctx,f2s.x,f2s.y,f2e.x,f2e.y,'#0891b2',2.5);
+            ctx.fillStyle='#0891b2'; ctx.font='bold 13px DM Sans'; ctx.textAlign='left';
+            ctx.fillText('F₂ > F₁',f2s.x+4,f2s.y+4);
+        }
+        // τ_zx arrows on cut face — these point in +x direction on the z-face at z=zc.
+        // This is the traction (−τ_zx) on the −z face of the outboard piece, pointing in +x
+        // to balance the net −x push from F₂ > F₁.
+        if (step>=3) {
+            for(let xo of [x0*0.5, 0, x1*0.5]) {
+                const ss=iso(xo, yMid, zc, cx, cy, s);
+                const se=iso(xo+dx*0.8, yMid, zc, cx, cy, s);
+                arr(ctx,ss.x,ss.y,se.x,se.y,'#dc2626',2);
+            }
+            const lp=iso(x1+5,yMid,zc,cx,cy,s);
+            ctx.fillStyle='#dc2626'; ctx.font='bold 14px JetBrains Mono'; ctx.textAlign='left';
+            ctx.fillText('τ_zx',lp.x+2,lp.y+16);
+        }
+    }
+
+    drawTriad(ctx, 55, 310);
+    const dxL=iso(0,H/2+6,-B/2-4,cx,cy,s);
+    ctx.fillStyle='#64748b'; ctx.font='italic 11px DM Sans'; ctx.textAlign='center';
+    ctx.fillText('dx',dxL.x,dxL.y);
+}
+
+// ─── 3. STRESS ELEMENT ──────────────────────────────
+function draw3(ctx, state) {
+    const W=440,HH=380; ctx.clearRect(0,0,W,HH);
+    const cx=W/2, cy=HH/2-15, sz=70;
+    const step = showAll ? 4 : curStep;
+    const tau = state.tau;
+
+    if (cutMode === 'web') {
+        document.getElementById('p3title').innerHTML = 'Stress Element — τ<sub>yx</sub> ↔ τ<sub>xy</sub>';
+        // Element
+        ctx.strokeStyle='#2d3748'; ctx.lineWidth=2;
+        ctx.strokeRect(cx-sz,cy-sz,sz*2,sz*2);
+
+        // Face labels (+x, −x, +y, −y)
+        ctx.fillStyle='#475569'; ctx.font='bold 11px JetBrains Mono'; ctx.textAlign='center';
+        ctx.fillText('+y face', cx, cy-sz-16);
+        ctx.fillText('−y face', cx, cy+sz+22);
+        ctx.save(); ctx.translate(cx+sz+16, cy); ctx.rotate(-Math.PI/2);
+        ctx.fillText('+x face', 0, 0); ctx.restore();
+        ctx.save(); ctx.translate(cx-sz-16, cy); ctx.rotate(Math.PI/2);
+        ctx.fillText('−x face', 0, 0); ctx.restore();
+
+        // Descriptive labels
+        ctx.fillStyle='#94a3b8'; ctx.font='10px DM Sans'; ctx.textAlign='center';
+        ctx.fillText('(cross-section)', cx+sz+16, cy+18);
+        ctx.fillText('(cut surface)', cx, cy+sz+34);
+
+        // Axes
+        arr(ctx,cx-sz-40,cy+sz+44,cx+sz+40,cy+sz+44,'#b0b8c4',1);
+        ctx.fillStyle='#94a3b8'; ctx.font='italic 12px DM Sans'; ctx.textAlign='center';
+        ctx.fillText('x',cx+sz+48,cy+sz+48);
+        arr(ctx,cx-sz-34,cy+sz+50,cx-sz-34,cy-sz-40,'#b0b8c4',1);
+        ctx.fillText('y',cx-sz-34,cy-sz-52);
+
+        // τ_yx on horizontal faces (step 3+)
+        if (step>=3) {
+            // Bottom face → +x (the traction on the −y face of the top chunk)
+            arr(ctx,cx-28,cy+sz,cx+28,cy+sz,'#dc2626',3);
+            ctx.fillStyle='#dc2626'; ctx.font='bold 13px JetBrains Mono'; ctx.textAlign='center';
+            ctx.fillText('τ_yx',cx+48,cy+sz+4);
+            // Top face → −x (on the +y face)
+            arr(ctx,cx+28,cy-sz,cx-28,cy-sz,'#dc2626',3);
+            ctx.fillText('τ_yx',cx-48,cy-sz+4);
+        }
+        // τ_xy on vertical faces (step 4+)
+        if (step>=4) {
+            // Right face (+x face) → −y (downward, same direction as V)
+            arr(ctx,cx+sz,cy-28,cx+sz,cy+28,'#0891b2',3);
+            ctx.fillStyle='#0891b2'; ctx.font='bold 13px JetBrains Mono'; ctx.textAlign='left';
+            ctx.fillText('τ_xy',cx+sz+5,cy+12);
+            // Left face (−x face) → +y (upward)
+            arr(ctx,cx-sz,cy+28,cx-sz,cy-28,'#0891b2',3);
+            ctx.textAlign='right'; ctx.fillText('τ_xy',cx-sz-5,cy-6);
+
+            // Moment equilibrium arc
+            ctx.strokeStyle='#64748b'; ctx.lineWidth=1.5; ctx.setLineDash([3,3]);
+            ctx.beginPath(); ctx.arc(cx,cy,36,-0.5,1.5); ctx.stroke(); ctx.setLineDash([]);
+            ctx.fillStyle='#1e293b'; ctx.font='600 12px DM Sans'; ctx.textAlign='center';
+            ctx.fillText('ΣM=0',cx,cy+4);
+
+            // Result box
+            const by=cy+sz+34;
+            ctx.fillStyle='#fef2f2'; ctx.strokeStyle='#dc2626'; ctx.lineWidth=1.5;
+            rr(ctx,cx-140,by,280,48,6); ctx.fill(); ctx.stroke();
+            ctx.fillStyle='#991b1b'; ctx.font='bold 13px JetBrains Mono'; ctx.textAlign='center';
+            ctx.fillText('τ_xy = τ_yx = −VQ/It = '+(-tau).toFixed(2)+' MPa',cx,by+17);
+            ctx.fillStyle='#64748b'; ctx.font='11px DM Sans';
+            ctx.fillText('On +x face → points −y (↓ same as V)',cx,by+36);
+        }
+    } else {
+        // FLANGE stress element: τ_zx ↔ τ_xz
+        document.getElementById('p3title').innerHTML = 'Stress Element — τ<sub>zx</sub> ↔ τ<sub>xz</sub>';
+        ctx.strokeStyle='#2d3748'; ctx.lineWidth=2;
+        ctx.strokeRect(cx-sz,cy-sz,sz*2,sz*2);
+
+        // Face labels
+        ctx.fillStyle='#475569'; ctx.font='bold 11px JetBrains Mono'; ctx.textAlign='center';
+        ctx.fillText('+z face', cx, cy-sz-16);
+        ctx.fillText('−z face', cx, cy+sz+22);
+        ctx.save(); ctx.translate(cx+sz+16, cy); ctx.rotate(-Math.PI/2);
+        ctx.fillText('+x face', 0, 0); ctx.restore();
+        ctx.save(); ctx.translate(cx-sz-16, cy); ctx.rotate(Math.PI/2);
+        ctx.fillText('−x face', 0, 0); ctx.restore();
+
+        // Descriptive labels
+        ctx.fillStyle='#94a3b8'; ctx.font='10px DM Sans'; ctx.textAlign='center';
+        ctx.fillText('(cross-section)', cx+sz+16, cy+18);
+        ctx.fillText('(vertical cut)', cx, cy+sz+34);
+
+        // Axes
+        arr(ctx,cx-sz-40,cy+sz+44,cx+sz+40,cy+sz+44,'#b0b8c4',1);
+        ctx.fillStyle='#94a3b8'; ctx.font='italic 12px DM Sans'; ctx.textAlign='center';
+        ctx.fillText('x',cx+sz+48,cy+sz+48);
+        arr(ctx,cx-sz-34,cy+sz+50,cx-sz-34,cy-sz-40,'#b0b8c4',1);
+        ctx.fillText('z',cx-sz-34,cy-sz-52);
+
+        // τ_zx on z-faces (step 3+) — points in +x on bottom, −x on top
+        if (step>=3) {
+            arr(ctx,cx-28,cy+sz,cx+28,cy+sz,'#dc2626',3);
+            ctx.fillStyle='#dc2626'; ctx.font='bold 13px JetBrains Mono'; ctx.textAlign='center';
+            ctx.fillText('τ_zx',cx+48,cy+sz+4);
+            arr(ctx,cx+28,cy-sz,cx-28,cy-sz,'#dc2626',3);
+            ctx.fillText('τ_zx',cx-48,cy-sz+4);
+        }
+        // τ_xz on x-faces (step 4+) — points in −z (toward web) on +x face
+        if (step>=4) {
+            // +x face → −z direction (upward in this x-z diagram = toward web)
+            arr(ctx,cx+sz,cy-28,cx+sz,cy+28,'#0891b2',3);
+            ctx.fillStyle='#0891b2'; ctx.font='bold 13px JetBrains Mono'; ctx.textAlign='left';
+            ctx.fillText('τ_xz',cx+sz+5,cy+12);
+            arr(ctx,cx-sz,cy+28,cx-sz,cy-28,'#0891b2',3);
+            ctx.textAlign='right'; ctx.fillText('τ_xz',cx-sz-5,cy-6);
+
+            ctx.strokeStyle='#64748b'; ctx.lineWidth=1.5; ctx.setLineDash([3,3]);
+            ctx.beginPath(); ctx.arc(cx,cy,36,-0.5,1.5); ctx.stroke(); ctx.setLineDash([]);
+            ctx.fillStyle='#1e293b'; ctx.font='600 12px DM Sans'; ctx.textAlign='center';
+            ctx.fillText('ΣM=0',cx,cy+4);
+
+            const by=cy+sz+34;
+            ctx.fillStyle='#fef2f2'; ctx.strokeStyle='#dc2626'; ctx.lineWidth=1.5;
+            rr(ctx,cx-140,by,280,48,6); ctx.fill(); ctx.stroke();
+            ctx.fillStyle='#991b1b'; ctx.font='bold 13px JetBrains Mono'; ctx.textAlign='center';
+            ctx.fillText('τ_xz = τ_zx = −VQ/It = '+(-tau).toFixed(2)+' MPa',cx,by+17);
+            ctx.fillStyle='#64748b'; ctx.font='11px DM Sans';
+            ctx.fillText('On +x face → points toward web (horizontal shear)',cx,by+36);
+        }
+    }
+}
+
+// ─── 4. DISTRIBUTION & SHEAR FLOW ───────────────────
+function draw4(ctx, tp, state) {
+    const W=440,HH=380; ctx.clearRect(0,0,W,HH);
+    const I = state.I, V = state.V;
+
+    if (tp === 'rect') {
+        // Simple parabolic distribution
+        drawWebDist(ctx, tp, state);
+    } else {
+        // I-beam: show shear flow on cross-section
+        if (cutMode === 'web') {
+            drawWebDist(ctx, tp, state);
+        } else {
+            drawShearFlow(ctx, state);
+        }
+    }
+}
+
+function drawWebDist(ctx, tp, state) {
+    const W=440,HH=380,I=state.I,V=state.V;
+    const pL=130,pR=390,pT=30,pB=340;
+
+    // Mini section
+    const mcx=60,mcy=(pT+pB)/2,ms=1.4;
+    ctx.strokeStyle='#94a3b8'; ctx.lineWidth=1.5;
+    ctx.beginPath();
+    if(tp==='rect'){ctx.rect(mcx-B*ms/2,mcy-H*ms/2,B*ms,H*ms);}
+    else{const wf=B*ms,hf=TF*ms,ww=TW*ms,hh=H*ms;
+        ctx.moveTo(mcx-wf/2,mcy-hh/2);ctx.lineTo(mcx+wf/2,mcy-hh/2);ctx.lineTo(mcx+wf/2,mcy-hh/2+hf);ctx.lineTo(mcx+ww/2,mcy-hh/2+hf);
+        ctx.lineTo(mcx+ww/2,mcy+hh/2-hf);ctx.lineTo(mcx+wf/2,mcy+hh/2-hf);ctx.lineTo(mcx+wf/2,mcy+hh/2);ctx.lineTo(mcx-wf/2,mcy+hh/2);
+        ctx.lineTo(mcx-wf/2,mcy+hh/2-hf);ctx.lineTo(mcx-ww/2,mcy+hh/2-hf);ctx.lineTo(mcx-ww/2,mcy-hh/2+hf);ctx.lineTo(mcx-wf/2,mcy-hh/2+hf);ctx.closePath();}
+    ctx.stroke();
+
+    // Compute distribution
+    const nP=200; let tMax=0; const pts=[];
+    for(let i=0;i<=nP;i++){
+        const y=-H/2+(H*i/nP);
+        const Q=Math.abs(webQ(tp,y)), t=webWidth(tp,y);
+        const tau=t>0?(V*Q)/(I*t):0;
+        pts.push({y,tau}); if(tau>tMax) tMax=tau;
+    }
+    if(tMax===0)tMax=1;
+    const yPx=y=>pT+(pB-pT)*(0.5-y/H);
+    const tPx=t=>pL+(t/tMax)*(pR-pL)*0.85;
+
+    // Axes
+    ctx.strokeStyle='#cbd5e1';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(pL,pT);ctx.lineTo(pL,pB);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(pL,yPx(0));ctx.lineTo(pR,yPx(0));ctx.stroke();
+    ctx.fillStyle='#94a3b8';ctx.font='italic 11px DM Sans';ctx.textAlign='center';
+    ctx.fillText('τ = VQ/It (MPa)',(pL+pR)/2,pT-8);
+    ctx.save();ctx.translate(pL-12,(pT+pB)/2);ctx.rotate(-Math.PI/2);ctx.fillText('y',0,0);ctx.restore();
+
+    // Ticks
+    ctx.font='10px JetBrains Mono';ctx.textAlign='right';
+    for(let yv of [-H/2,-H/4,0,H/4,H/2]){const py=yPx(yv);ctx.fillText(yv,pL-5,py+3);
+        ctx.strokeStyle='#e2e8f0';ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(pL,py);ctx.lineTo(pL+3,py);ctx.stroke();}
+
+    // Curve + fill
+    ctx.strokeStyle='#dc2626';ctx.lineWidth=2.5;
+    ctx.beginPath();pts.forEach((p,i)=>{const px=tPx(p.tau),py=yPx(p.y);i?ctx.lineTo(px,py):ctx.moveTo(px,py);});ctx.stroke();
+    ctx.fillStyle='rgba(220,38,38,0.06)';ctx.beginPath();ctx.moveTo(pL,yPx(-H/2));
+    pts.forEach(p=>ctx.lineTo(tPx(p.tau),yPx(p.y)));ctx.lineTo(pL,yPx(H/2));ctx.closePath();ctx.fill();
+
+    // Current cut
+    const yc=state.yc;
+    if(Math.abs(yc)<H/2){
+        const Qc=Math.abs(webQ(tp,yc)),tc=webWidth(tp,yc),tc2=tc>0?(V*Qc)/(I*tc):0;
+        const curPx=tPx(tc2),curPy=yPx(yc);
+        ctx.strokeStyle='#d95319';ctx.lineWidth=1;ctx.setLineDash([4,3]);
+        ctx.beginPath();ctx.moveTo(mcx+B*ms/2+3,mcy-yc*ms);ctx.lineTo(pL,curPy);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(pL,curPy);ctx.lineTo(curPx,curPy);ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle='#d95319';ctx.beginPath();ctx.arc(curPx,curPy,5,0,2*Math.PI);ctx.fill();
+        ctx.strokeStyle='white';ctx.lineWidth=2;ctx.beginPath();ctx.arc(curPx,curPy,5,0,2*Math.PI);ctx.stroke();
+        ctx.fillStyle='#d95319';ctx.font='bold 12px JetBrains Mono';ctx.textAlign='left';
+        ctx.fillText(tc2.toFixed(2)+' MPa',curPx+10,curPy+4);
+        ctx.strokeStyle='#d95319';ctx.lineWidth=2;
+        ctx.beginPath();ctx.moveTo(mcx-B*ms/2-4,mcy-yc*ms);ctx.lineTo(mcx+B*ms/2+4,mcy-yc*ms);ctx.stroke();
+    }
+    // Max label
+    ctx.fillStyle='#94a3b8';ctx.font='10px DM Sans';ctx.textAlign='left';
+    ctx.fillText('τ_max = '+tMax.toFixed(2)+' MPa (at N.A.)',tPx(tMax)-20,yPx(0)-10);
+    // Sign note
+    ctx.fillStyle='#94a3b8';ctx.font='10px DM Sans';ctx.textAlign='center';
+    ctx.fillText('Plot shows τ = VQ/It (positive, as in textbook).',(pL+pR)/2,pB+14);
+    ctx.fillText('Signed stress component: τ_xy = −VQ/It < 0 (see stress element)',(pL+pR)/2,pB+28);
+}
+
+function drawShearFlow(ctx, state) {
+    const W=440,HH=380;
+    // Draw I-beam cross section with shear flow arrows
+    const cx=W/2, cy=HH/2-10, sc=2.0;
+    const wf=B*sc, hh=H*sc, hf=TF*sc, ww=TW*sc;
+
+    // Outline
+    ctx.strokeStyle='#2d3748'; ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.moveTo(cx-wf/2,cy-hh/2);ctx.lineTo(cx+wf/2,cy-hh/2);ctx.lineTo(cx+wf/2,cy-hh/2+hf);ctx.lineTo(cx+ww/2,cy-hh/2+hf);
+    ctx.lineTo(cx+ww/2,cy+hh/2-hf);ctx.lineTo(cx+wf/2,cy+hh/2-hf);ctx.lineTo(cx+wf/2,cy+hh/2);ctx.lineTo(cx-wf/2,cy+hh/2);
+    ctx.lineTo(cx-wf/2,cy+hh/2-hf);ctx.lineTo(cx-ww/2,cy+hh/2-hf);ctx.lineTo(cx-ww/2,cy-hh/2+hf);ctx.lineTo(cx-wf/2,cy-hh/2+hf);
+    ctx.closePath(); ctx.stroke();
+
+    // N.A.
+    ctx.strokeStyle='#b0b8c4';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.moveTo(cx-wf/2-10,cy);ctx.lineTo(cx+wf/2+10,cy);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#94a3b8';ctx.font='italic 11px DM Sans';ctx.textAlign='right';
+    ctx.fillText('N.A.',cx-wf/2-14,cy+4);
+
+    // Shear flow arrows — top flange: flow from tips toward web
+    const aY_top = cy-hh/2+hf/2; // mid-height of top flange
+    const aY_bot = cy+hh/2-hf/2; // mid-height of bottom flange
+
+    // Top flange: arrows pointing inward (toward web)
+    for(let i=0;i<3;i++){
+        const frac = 0.3+i*0.25;
+        // Right side: → inward (−z)
+        const x1r=cx+ww/2+(wf/2-ww/2)*frac+15, x2r=cx+ww/2+(wf/2-ww/2)*frac-10;
+        arr(ctx,cx+wf/2-i*18, aY_top, cx+ww/2+10+i*4, aY_top, '#dc2626', 2);
+        // Left side: → inward (+z)
+        arr(ctx,cx-wf/2+i*18, aY_top, cx-ww/2-10-i*4, aY_top, '#dc2626', 2);
+    }
+
+    // Bottom flange: arrows pointing inward
+    for(let i=0;i<3;i++){
+        arr(ctx,cx+wf/2-i*18, aY_bot, cx+ww/2+10+i*4, aY_bot, '#dc2626', 2);
+        arr(ctx,cx-wf/2+i*18, aY_bot, cx-ww/2-10-i*4, aY_bot, '#dc2626', 2);
+    }
+
+    // Web: arrows pointing downward
+    for(let i=0;i<4;i++){
+        const fy = cy-hh/2+hf+10 + i*((hh-2*hf-20)/3);
+        arr(ctx,cx,fy,cx,fy+18,'#0891b2',2.5);
+    }
+
+    // Labels
+    ctx.fillStyle='#dc2626'; ctx.font='bold 13px JetBrains Mono'; ctx.textAlign='left';
+    ctx.fillText('τ_xz',cx+wf/2+6, aY_top+4);
+    ctx.fillText('τ_xz',cx+wf/2+6, aY_bot+4);
+    ctx.fillStyle='#0891b2'; ctx.font='bold 13px JetBrains Mono'; ctx.textAlign='left';
+    ctx.fillText('τ_xy',cx+ww/2+6, cy+4);
+
+    // Current cut position — +z is LEFT in this view
+    const zc = state.zc;
+    // Show cut on the −z side (RIGHT on screen, where the outboard piece we're analyzing is)
+    const zcPxR = cx + zc*sc;  // z = -zc → right side
+    const zcPxL = cx - zc*sc;  // z = +zc → left side
+    ctx.strokeStyle='#d95319'; ctx.lineWidth=2; ctx.setLineDash([5,4]);
+    const fTop = state.flange==='top' ? cy-hh/2 : cy+hh/2-hf;
+    const fBot = state.flange==='top' ? cy-hh/2+hf : cy+hh/2;
+    ctx.beginPath();ctx.moveTo(zcPxR,fTop-6);ctx.lineTo(zcPxR,fBot+6);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(zcPxL,fTop-6);ctx.lineTo(zcPxL,fBot+6);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#d95319';ctx.font='bold 11px DM Sans';
+    ctx.textAlign='center'; ctx.fillText('z=−'+zc,zcPxR,fBot+18);
+    ctx.fillText('z=+'+zc,zcPxL,fBot+18);
+
+    // z-axis indicator
+    arr(ctx, cx+30, HH-26, 12, HH-26, '#b0b8c4', 1);
+    ctx.fillStyle='#b0b8c4'; ctx.font='italic 10px DM Sans'; ctx.textAlign='right';
+    ctx.fillText('+z',10,HH-30);
+
+    // Title
+    ctx.fillStyle='#1e293b'; ctx.font='bold 14px DM Sans'; ctx.textAlign='center';
+    ctx.fillText('Shear Flow Pattern',cx,22);
+
+    // Explanation
+    ctx.fillStyle='#64748b'; ctx.font='11px DM Sans'; ctx.textAlign='center';
+    ctx.fillText('Flanges: horizontal flow toward web (τ_xz)',cx,HH-30);
+    ctx.fillText('Web: vertical flow downward (τ_xy, same direction as V)',cx,HH-16);
+}
+
+// ─── EXPLANATION TEXT ────────────────────────────────
+function getExpl(step, state) {
+    const tp = state.tp, tau = state.tau;
+    if (cutMode === 'web') {
+        const texts = [
+            `<strong>Step 1 — The Horizontal Cut</strong><br>
+            <em>Coordinates:</em> +x along the beam (out of screen), +y up, +z to the left (right-hand rule). V is positive downward (−y direction).<br><br>
+            We make a <span class="ca">horizontal cut</span> at <span class="eq">y = ${state.yc} mm</span>. The shaded region above is <strong>A′</strong>, and Q = A′·ȳ is the first moment of that area about the N.A.
+            <span class="eq-bl">Q = A′ · ȳ = ${Math.round(state.Q).toLocaleString()} mm³</span>
+            Q captures <em>how much area</em> is beyond the cut and <em>how far</em> its centroid is from the N.A. This is why Q peaks at the neutral axis and vanishes at the surfaces.`,
+
+            `<strong>Step 2 — Normal Force F₁</strong><br>
+            Bending moment <span class="cp">M</span> creates normal stress <span class="eq">σ = My/I</span>. Integrating over A′ on the back face:
+            <span class="eq-bl">F₁ = ∫<sub>A′</sub> (M·y/I) dA = MQ/I</span>
+            This pushes the chunk in +x (into the element from the back).`,
+
+            `<strong>Step 3 — Force Imbalance</strong><br>
+            The front face has <span class="cp">M + dM</span>, so:
+            <span class="eq-bl">F₂ = (M+dM)Q/I &gt; F₁</span>
+            The net push on the chunk is in −x. Something on the <strong>horizontal cut face</strong> must balance this.`,
+
+            `<strong>Step 4 — Solving for τ<sub>yx</sub> (Longitudinal Shear)</strong><br>
+            The bottom face of the top chunk has outward normal <span class="eq">−ŷ</span>. By Cauchy's formula, the x-traction on this face is <span class="eq">t<sub>x</sub> = −τ<sub>yx</sub></span>. Equilibrium:
+            <span class="eq-bl">F₁ − F₂ − τ<sub>yx</sub>·t·dx = 0</span>
+            <span class="eq-bl cr">τ<sub>yx</sub> = −(F₂−F₁)/(t·dx) = −VQ/It</span>
+            The negative sign means: on the <strong>+y face</strong>, τ<sub>yx</sub> points in <strong>−x</strong>.
+            On the <strong>cut surface</strong> (−y face), the actual traction is <span class="eq">−τ<sub>yx</sub> = +VQ/It</span> in +x — exactly what balances F₂ &gt; F₁.<br><br>
+            <em>Key insight:</em> We solved τ<sub>yx</sub> on the horizontal face because equilibrium there is clean. We <em>cannot</em> find τ<sub>xy</sub> directly — the distribution across the width is unknown.`,
+
+            `<strong>Step 5 — Complementary Shear: τ<sub>xy</sub> = τ<sub>yx</sub></strong><br>
+            Moment equilibrium on the stress element gives <span class="eq">τ<sub>xy</sub> = τ<sub>yx</sub></span>:
+            <span class="eq-bl cr">τ<sub>xy</sub> = τ<sub>yx</sub> = −VQ/It = ${(-tau).toFixed(2)} MPa</span>
+            On the <strong>+x face</strong> (cross-section, the right side of the stress element), τ<sub>xy</sub> &lt; 0 → points <strong>downward</strong> (−y), the same direction as V.<br><br>
+            <strong>Textbook formula vs. signed component:</strong><br>
+            Most textbooks write <span class="eq">τ = VQ/It</span> and plot it as <strong>positive</strong> — this gives the <em>magnitude</em> of the shear stress. The distribution plot (Panel 4) follows this convention.<br><br>
+            The <em>signed stress component</em> <span class="eq">τ<sub>xy</sub> = −VQ/It</span> carries directional information: negative means the shear on the +x face points in −y (downward). The minus sign arises because V is defined as positive downward (−y), so the Cauchy traction on the cross-section acts in −y. Both presentations give the same physics — one tracks magnitude, the other tracks the full tensor component.`
+        ];
+        return texts[step] || texts[4];
+    } else {
+        const texts = [
+            `<strong>Step 1 — The Vertical Cut in the Flange</strong><br>
+            <em>Coordinates:</em> +x along the beam, +y up, +z to the left (right-hand rule). V is positive downward (−y).<br><br>
+            For an I-beam flange, we make a <span class="ca">vertical cut</span> at <span class="eq">z = ${state.zc} mm</span>, isolating the <strong>outboard</strong> strip (from |z| to B/2).
+            <span class="eq-bl">A′ = (B/2 − |z|) × t<sub>f</sub> = ${Math.round(state.Ap).toLocaleString()} mm²</span>
+            The first moment Q uses the <em>y-distance</em> of the outboard strip's centroid from the N.A.:
+            <span class="eq-bl">Q = A′ · ȳ = ${Math.round(state.Q).toLocaleString()} mm³</span>
+            Note: Q is still <span class="eq">∫ y dA</span> — even for the flange cut, because the bending stress that creates F₁ and F₂ depends on y, not z.`,
+
+            `<strong>Step 2 — Normal Forces on the Outboard Piece</strong><br>
+            The bending moment creates normal stress <span class="eq">σ = My/I</span> on the outboard strip just as before.
+            <span class="eq-bl">F₁ = MQ/I, &nbsp; F₂ = (M+dM)Q/I</span>
+            Since <span class="cp">M + dM &gt; M</span>, we have <strong class="ct">F₂ &gt; F₁</strong>. The outboard piece is pushed in −x.`,
+
+            `<strong>Step 3 — Equilibrium → τ<sub>zx</sub> on the Cut Face</strong><br>
+            The vertical cut face (at z = ${state.zc} mm) must supply a shear stress to balance F₂ − F₁.
+            This is <strong class="cr">τ<sub>zx</sub></strong> — shear on the z-face, pointing in x:
+            <span class="eq-bl cr">τ<sub>zx</sub> = −VQ / It</span>
+            where <span class="eq">t = t<sub>f</sub></span> (the flange thickness, not the web width!).
+            The <em>actual force direction</em> on the outboard piece's cut face points in +x to resist F₂ &gt; F₁.`,
+
+            `<strong>Step 4 — Complementary Shear: τ<sub>xz</sub> = τ<sub>zx</sub></strong><br>
+            Moment equilibrium on the x-z stress element gives:
+            <span class="eq-bl cr">τ<sub>xz</sub> = τ<sub>zx</sub> = −VQ/It = ${(-tau).toFixed(2)} MPa</span>
+            On the <strong>+x face</strong> (cross-section), τ<sub>xz</sub> points <strong>horizontally toward the web</strong>.
+            This is the <em>horizontal shear stress in the flange</em> — it's why flanges carry shear flow toward the web-flange junction.`,
+
+            `<strong>Step 5 — Shear Flow Pattern</strong><br>
+            The complete shear flow in an I-beam:<br>
+            • <strong class="cr">Flanges:</strong> Horizontal flow (τ<sub>xz</sub>) from the tips toward the web on both sides.<br>
+            • <strong class="ct">Web:</strong> Vertical flow (τ<sub>xy</sub>) downward, in the direction of V.<br><br>
+            At the web-flange junction, the flange flows "turn the corner" and feed into the web flow. This is why the web carries most of the shear force — it accumulates the contributions from the flanges.`
+        ];
+        return texts[step] || texts[4];
+    }
+}
+
+// ─── MAIN UPDATE ─────────────────────────────────────
+function updateAll() {
+    const tp = document.getElementById('secType').value;
+    const V_kN = parseFloat(document.getElementById('slV').value);
+    const V = V_kN * 1000;
+    const I = getI(tp);
+
+    let yc=0, zc=0, flange='top', Q=0, Ap=0, t=0, tau=0, ybar=0;
+
+    if (cutMode === 'web') {
+        yc = parseFloat(document.getElementById('slY').value);
+        Q = Math.abs(webQ(tp, yc));
+        Ap = webAp(tp, yc);
+        t = webWidth(tp, yc);
+        tau = t > 0 ? (V*Q)/(I*t) : 0;
+        ybar = Ap > 0 ? Q/Ap : 0;
+        document.getElementById('vY').textContent = yc + ' mm';
+        document.getElementById('rCut').textContent = 'Web (horizontal)';
+    } else {
+        zc = parseFloat(document.getElementById('slZ').value);
+        flange = document.getElementById('selFlange').value;
+        Q = flangeQ(zc);
+        Ap = flangeAp(zc);
+        t = TF; // flange thickness
+        tau = t > 0 ? (V*Q)/(I*t) : 0;
+        ybar = Ap > 0 ? Q/Ap : 0;
+        document.getElementById('vZ').textContent = zc + ' mm';
+        document.getElementById('vFlange').textContent = flange === 'top' ? 'Top' : 'Bottom';
+        document.getElementById('rCut').textContent = 'Flange (vertical)';
+    }
+
+    document.getElementById('vV').textContent = V_kN + ' kN';
+    document.getElementById('rT').textContent = t;
+    document.getElementById('rI').textContent = Math.round(I).toLocaleString();
+    document.getElementById('rAp').textContent = Math.round(Ap).toLocaleString();
+    document.getElementById('rYbar').textContent = ybar.toFixed(1);
+    document.getElementById('rQ').textContent = Math.round(Q).toLocaleString();
+    document.getElementById('rTau').textContent = (-tau).toFixed(2);
+
+    if (cutMode === 'web') {
+        document.getElementById('rTauLine').innerHTML = 'τ<sub>xy</sub> = −VQ/It = <span id="rTau">'+(-tau).toFixed(2)+'</span> MPa';
+    } else {
+        document.getElementById('rTauLine').innerHTML = 'τ<sub>xz</sub> = −VQ/It = <span id="rTau">'+(-tau).toFixed(2)+'</span> MPa';
+    }
+
+    const state = { tp, V, I, yc, zc, flange, Q, Ap, t, tau, ybar };
+    const step = showAll ? 4 : curStep;
+    setStepUI();
+
+    draw1(document.getElementById('c1').getContext('2d'), tp, state);
+    draw2(document.getElementById('c2').getContext('2d'), tp, state);
+    draw3(document.getElementById('c3').getContext('2d'), state);
+    draw4(document.getElementById('c4').getContext('2d'), tp, state);
+
+    const allHTML = showAll
+        ? [0,1,2,3,4].map(s => getExpl(s,state)).join('<hr style="border:0;border-top:1px solid #e2e0db;margin:14px 0;">')
+        : getExpl(step, state);
+    document.getElementById('explBox').innerHTML = allHTML;
+}
+
+onSectionChange();
+</script>
+</body>
+</html>
