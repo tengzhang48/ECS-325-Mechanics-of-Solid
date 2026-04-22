@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beam Deflection Superposition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Add KaTeX for Math Formatting -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+</head>
+<body class="bg-slate-50 min-h-screen p-4 md:p-8 font-sans text-slate-800">
+
+    <div class="max-w-6xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col md:flex-row">
+        
+        <!-- Sidebar Controls -->
+        <div class="w-full md:w-1/3 bg-slate-100 p-6 border-r border-slate-200 flex flex-col gap-6 overflow-y-auto max-h-[800px]">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900 mb-1">Beam Deflection</h1>
+                <p class="text-sm text-slate-500">Superposition Principle Explorer</p>
+            </div>
+
+            <!-- Beam Type -->
+            <div>
+                <label for="beamType" class="block text-sm font-semibold text-slate-700 mb-2">Beam Support Type</label>
+                <select id="beamType" class="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                    <option value="cantilever">Cantilever (Fixed-Free)</option>
+                    <option value="simplySupported">Simply Supported (Pin-Roller)</option>
+                </select>
+            </div>
+
+            <!-- Length (L) -->
+            <div>
+                <div class="flex justify-between mb-1">
+                    <label for="length" class="text-sm font-semibold text-slate-700">Length (L)</label>
+                    <span id="lengthVal" class="text-sm font-bold text-blue-600">10 m</span>
+                </div>
+                <input type="range" id="length" min="5" max="20" step="1" value="10" class="w-full h-2 bg-slate-300 rounded-lg appearance-none cursor-pointer accent-blue-600">
+            </div>
+
+            <!-- Flexural Rigidity (EI) -->
+            <div>
+                <div class="flex justify-between mb-1">
+                    <label for="ei" class="text-sm font-semibold text-slate-700">Flexural Rigidity (EI)</label>
+                    <span id="eiVal" class="text-sm font-bold text-blue-600">10000 kN·m²</span>
+                </div>
+                <input type="range" id="ei" min="5000" max="50000" step="1000" value="10000" class="w-full h-2 bg-slate-300 rounded-lg appearance-none cursor-pointer accent-blue-600">
+            </div>
+
+            <hr class="border-slate-300 my-2">
+
+            <!-- Point Load (P) -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <div id="diagram-P" class="h-14 w-full mb-3 flex items-center justify-center"></div>
+                
+                <div class="flex justify-between mb-1">
+                    <label for="pointLoad" class="text-sm font-semibold text-slate-700">Point Load (P)</label>
+                    <span id="pointLoadVal" class="text-sm font-bold text-rose-500">50 kN</span>
+                </div>
+                <input type="range" id="pointLoad" min="0" max="200" step="5" value="50" class="w-full h-2 bg-rose-200 rounded-lg appearance-none cursor-pointer accent-rose-500 mb-4">
+                
+                <div class="flex justify-between mb-1">
+                    <label for="pointLoadPos" class="text-sm font-semibold text-slate-700">Load Location (a)</label>
+                    <span id="pointLoadPosVal" class="text-sm font-bold text-slate-600">10 m</span>
+                </div>
+                <p class="text-xs text-slate-500 mb-2" id="pointLoadDesc">Distance from left support.</p>
+                <input type="range" id="pointLoadPos" min="0" max="10" step="0.1" value="10" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-500">
+            </div>
+
+            <!-- Uniform Load (w) -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <div id="diagram-w" class="h-14 w-full mb-3 flex items-center justify-center"></div>
+                <div class="flex justify-between mb-1">
+                    <label for="uniformLoad" class="text-sm font-semibold text-slate-700">Uniform Load (w)</label>
+                    <span id="uniformLoadVal" class="text-sm font-bold text-teal-500">10 kN/m</span>
+                </div>
+                <p class="text-xs text-slate-500 mb-2">Applied across entire length.</p>
+                <input type="range" id="uniformLoad" min="0" max="50" step="1" value="10" class="w-full h-2 bg-teal-200 rounded-lg appearance-none cursor-pointer accent-teal-500">
+            </div>
+
+        </div>
+
+        <!-- Main Chart Area -->
+        <div class="w-full md:w-2/3 p-6 flex flex-col bg-white">
+            <div class="flex-grow relative h-[400px] md:h-auto min-h-[400px]">
+                <canvas id="deflectionChart"></canvas>
+            </div>
+            
+            <div class="mt-6 bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">
+                <p class="text-sm text-slate-500 uppercase tracking-wider font-semibold mb-1">Maximum Superposed Deflection</p>
+                <p id="maxDeflectionDisplay" class="text-3xl font-bold text-slate-800">0.000 m</p>
+            </div>
+
+            <!-- Deflection Formulas Display -->
+            <div class="mt-4 bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <p class="text-sm text-blue-700 font-semibold mb-2">Active Deflection Formulas:</p>
+                <div id="mathFormulas" class="text-slate-800 overflow-x-auto min-h-[100px] flex items-center justify-center">
+                    <!-- KaTeX formulas will be rendered here -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let chartInstance = null;
+
+        // UI Elements mapping
+        const els = {
+            type: document.getElementById('beamType'),
+            L: document.getElementById('length'),
+            EI: document.getElementById('ei'),
+            P: document.getElementById('pointLoad'),
+            Ppos: document.getElementById('pointLoadPos'),
+            w: document.getElementById('uniformLoad'),
+            valL: document.getElementById('lengthVal'),
+            valEI: document.getElementById('eiVal'),
+            valP: document.getElementById('pointLoadVal'),
+            valPpos: document.getElementById('pointLoadPosVal'),
+            valw: document.getElementById('uniformLoadVal'),
+            descP: document.getElementById('pointLoadDesc'),
+            maxDef: document.getElementById('maxDeflectionDisplay')
+        };
+
+        function getDiagramSVG(type, loadType, aRatio = 1) {
+            const cantileverBase = `<rect x="10" y="20" width="10" height="20" fill="#94a3b8" /><line x1="20" y1="30" x2="100" y2="30" stroke="#64748b" stroke-width="4" stroke-linecap="round"/>`;
+            const ssBase = `<line x1="20" y1="30" x2="100" y2="30" stroke="#64748b" stroke-width="4" stroke-linecap="round"/><polygon points="20,32 15,42 25,42" fill="#94a3b8" /><circle cx="100" cy="37" r="4" fill="#94a3b8" />`;
+
+            let base = type === 'cantilever' ? cantileverBase : ssBase;
+            let load = '';
+
+            if (loadType === 'P') {
+                const xPos = 20 + aRatio * 80;
+                load = `<path d="M ${xPos} 8 L ${xPos} 26 M ${xPos-4} 22 L ${xPos} 26 L ${xPos+4} 22" stroke="#e11d48" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        <text x="${xPos+5}" y="15" fill="#e11d48" font-size="12" font-weight="bold" font-family="sans-serif">P</text>`;
+            } else if (loadType === 'w') {
+                load = `<line x1="20" y1="12" x2="100" y2="12" stroke="#0d9488" stroke-width="2"/>
+                        <path d="M 20 12 L 20 26 M 17 23 L 20 26 L 23 23" stroke="#0d9488" stroke-width="1.5" fill="none"/>
+                        <path d="M 40 12 L 40 26 M 37 23 L 40 26 L 43 23" stroke="#0d9488" stroke-width="1.5" fill="none"/>
+                        <path d="M 60 12 L 60 26 M 57 23 L 60 26 L 63 23" stroke="#0d9488" stroke-width="1.5" fill="none"/>
+                        <path d="M 80 12 L 80 26 M 77 23 L 80 26 L 83 23" stroke="#0d9488" stroke-width="1.5" fill="none"/>
+                        <path d="M 100 12 L 100 26 M 97 23 L 100 26 L 103 23" stroke="#0d9488" stroke-width="1.5" fill="none"/>
+                        <text x="50" y="8" fill="#0d9488" font-size="12" font-weight="bold" font-family="sans-serif">w</text>`;
+            }
+
+            return `<svg viewBox="0 0 130 50" class="w-full h-full drop-shadow-sm">${base}${load}</svg>`;
+        }
+
+        function updateLabels() {
+            // Dynamically update the max allowed position to match beam length
+            els.Ppos.max = els.L.value;
+            if (parseFloat(els.Ppos.value) > parseFloat(els.L.value)) {
+                els.Ppos.value = els.L.value;
+            }
+
+            els.valL.textContent = `${els.L.value} m`;
+            els.valEI.textContent = `${els.EI.value} kN·m²`;
+            els.valP.textContent = `${els.P.value} kN`;
+            els.valPpos.textContent = `${els.Ppos.value} m`;
+            els.valw.textContent = `${els.w.value} kN/m`;
+
+            const aRatio = parseFloat(els.Ppos.value) / parseFloat(els.L.value);
+
+            if (els.type.value === 'cantilever') {
+                els.descP.textContent = `Applied at x = a = ${els.Ppos.value} m.`;
+            } else {
+                els.descP.textContent = `Applied at x = a = ${els.Ppos.value} m. Table Case 5.`;
+            }
+
+            document.getElementById('diagram-P').innerHTML = getDiagramSVG(els.type.value, 'P', aRatio);
+            document.getElementById('diagram-w').innerHTML = getDiagramSVG(els.type.value, 'w');
+        }
+
+        function calculateDeflection() {
+            updateLabels();
+
+            const type = els.type.value;
+            const L = parseFloat(els.L.value);
+            const EI = parseFloat(els.EI.value);
+            const P = parseFloat(els.P.value);
+            const a = parseFloat(els.Ppos.value);
+            const b = L - a;
+            const w = parseFloat(els.w.value);
+
+            const numPoints = 100;
+            const xValues = [];
+            const yP_Values = [];
+            const yw_Values = [];
+            const yTotal_Values = [];
+
+            let maxDeflection = 0;
+
+            for (let i = 0; i <= numPoints; i++) {
+                const x = (i / numPoints) * L;
+                xValues.push(x.toFixed(2));
+
+                let yP = 0;
+                let yw = 0;
+
+                if (type === 'cantilever') {
+                    // Generalized Point load P at distance 'a'
+                    if (x <= a) {
+                        yP = (-P * Math.pow(x, 2) / (6 * EI)) * (3 * a - x);
+                    } else {
+                        yP = (-P * Math.pow(a, 2) / (6 * EI)) * (3 * x - a);
+                    }
+                    // Formula 2: Uniform load w (Case 2)
+                    yw = (-w * Math.pow(x, 2) / (24 * EI)) * (Math.pow(x, 2) - 4 * L * x + 6 * Math.pow(L, 2));
+                } else if (type === 'simplySupported') {
+                    // Generalized Point load P at distance 'a' (Case 5)
+                    if (x <= a) {
+                        yP = (-P * b * x / (6 * L * EI)) * (Math.pow(L, 2) - Math.pow(b, 2) - Math.pow(x, 2));
+                    } else {
+                        yP = (-P * a * (L - x) / (6 * L * EI)) * (Math.pow(L, 2) - Math.pow(a, 2) - Math.pow(L - x, 2));
+                    }
+                    // Formula 6: Uniform load w (Case 6)
+                    yw = (-w * x / (24 * EI)) * (Math.pow(L, 3) - 2 * L * Math.pow(x, 2) + Math.pow(x, 3));
+                }
+
+                const yTotal = yP + yw;
+                
+                yP_Values.push(yP);
+                yw_Values.push(yw);
+                yTotal_Values.push(yTotal);
+
+                // Track the absolute maximum deflection
+                if (Math.abs(yTotal) > Math.abs(maxDeflection)) {
+                    maxDeflection = yTotal;
+                }
+            }
+
+            // Update Max Deflection UI
+            els.maxDef.textContent = `${Math.abs(maxDeflection).toFixed(4)} m`;
+
+            // Build the KaTeX Math String for exact formulas
+            let mathLatex = String.raw`y_{total} = `;
+            let terms = [];
+            let formulasLatex = '';
+
+            if (type === 'cantilever') {
+                if (P > 0) {
+                    terms.push(String.raw`y_P`);
+                    formulasLatex += String.raw`y_P = \begin{cases} -\frac{P x^2}{6EI}(3a-x) & 0 \le x \le a \\ -\frac{P a^2}{6EI}(3x-a) & a < x \le L \end{cases} \\[1em]`;
+                }
+                if (w > 0) {
+                    terms.push(String.raw`y_w`);
+                    formulasLatex += String.raw`y_w = -\frac{w x^2}{24EI}(x^2 - 4Lx + 6L^2) \\[1em]`;
+                }
+            } else if (type === 'simplySupported') {
+                if (P > 0) {
+                    terms.push(String.raw`y_P`);
+                    formulasLatex += String.raw`y_P = \begin{cases} -\frac{P b x}{6LEI}(L^2 - b^2 - x^2) & 0 \le x \le a \\ -\frac{P a (L-x)}{6LEI}(L^2 - a^2 - (L-x)^2) & a < x \le L \end{cases} \\[0.5em] \text{(where } b = L - a \text{)} \\[1em]`;
+                }
+                if (w > 0) {
+                    terms.push(String.raw`y_w`);
+                    formulasLatex += String.raw`y_w = -\frac{w x}{24EI}(L^3 - 2Lx^2 + x^3) \\[1em]`;
+                }
+            }
+
+            if (terms.length === 0) {
+                mathLatex += `0`;
+            } else {
+                mathLatex += terms.join(' + ') + String.raw`\\[1em]` + formulasLatex;
+            }
+
+            if (window.katex) {
+                katex.render(mathLatex, document.getElementById('mathFormulas'), {
+                    displayMode: true,
+                    throwOnError: false
+                });
+            }
+
+            // Update Chart
+            updateChart(xValues, yP_Values, yw_Values, yTotal_Values);
+        }
+
+        function updateChart(labels, yP, yw, yTotal) {
+            const ctx = document.getElementById('deflectionChart').getContext('2d');
+
+            if (chartInstance) {
+                chartInstance.data.labels = labels;
+                chartInstance.data.datasets[0].data = yP;
+                chartInstance.data.datasets[1].data = yw;
+                chartInstance.data.datasets[2].data = yTotal;
+                chartInstance.update();
+                return;
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'P Deflection',
+                            data: yP,
+                            borderColor: '#f43f5e', // rose-500
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            fill: false,
+                            pointRadius: 0,
+                            tension: 0.2
+                        },
+                        {
+                            label: 'w Deflection',
+                            data: yw,
+                            borderColor: '#14b8a6', // teal-500
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            fill: false,
+                            pointRadius: 0,
+                            tension: 0.2
+                        },
+                        {
+                            label: 'Superposed Total',
+                            data: yTotal,
+                            borderColor: '#1e293b', // slate-800
+                            borderWidth: 4,
+                            fill: false,
+                            pointRadius: 0,
+                            tension: 0.2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Position along beam, x (m)', font: { size: 13, weight: 'bold' } },
+                            grid: { display: false }
+                        },
+                        y: {
+                            title: { display: true, text: 'Deflection, y (m)', font: { size: 13, weight: 'bold' } },
+                            suggestedMax: 0.05, 
+                            suggestedMin: -0.2
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y.toFixed(4) + ' m';
+                                }
+                            }
+                        },
+                        legend: {
+                            position: 'top',
+                            labels: { usePointStyle: true, boxWidth: 8 }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Attach Event Listeners
+        [els.type, els.L, els.EI, els.P, els.Ppos, els.w].forEach(input => {
+            input.addEventListener('input', calculateDeflection);
+        });
+
+        // Initialize App
+        calculateDeflection();
+
+    </script>
+</body>
+</html>
